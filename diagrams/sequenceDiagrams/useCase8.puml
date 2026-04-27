@@ -1,0 +1,57 @@
+@startuml
+title Use Case 8: Add Row
+hide footbox
+
+actor User
+participant MainWindow
+participant SubwindowManager
+participant MouseInteractionDispatcher
+participant EditAnySubwindow
+participant TableRowsSubwindow
+participant RowsController
+participant Table
+participant Row
+
+User -> MainWindow : double-click below row list
+activate MainWindow
+MainWindow -> SubwindowManager : handleMouseEvent(...)
+activate SubwindowManager
+SubwindowManager -> SubwindowManager : findSubwindowAt(...)
+SubwindowManager --> SubwindowManager : target
+SubwindowManager -> SubwindowManager : bringToFront(target)
+SubwindowManager -> MouseInteractionDispatcher : dispatchMouseEvent(...)
+activate MouseInteractionDispatcher
+MouseInteractionDispatcher -> EditAnySubwindow : wantsToHandle(...)
+activate EditAnySubwindow
+EditAnySubwindow --> MouseInteractionDispatcher : true
+deactivate EditAnySubwindow
+MouseInteractionDispatcher -> EditAnySubwindow : handle(...)
+activate EditAnySubwindow
+EditAnySubwindow -> TableRowsSubwindow : handleMouseEvent(...)
+activate TableRowsSubwindow
+TableRowsSubwindow -> TableRowsSubwindow : isInAddRowArea(...)
+TableRowsSubwindow --> TableRowsSubwindow : true
+TableRowsSubwindow -> RowsController : handleCreateNewRowRequest()
+activate RowsController
+RowsController -> Table : createNewRow()
+activate Table
+Table -> Row : Row(...)
+activate Row
+Row --> Table : row
+deactivate Row
+Table --> RowsController : void
+deactivate Table
+RowsController --> TableRowsSubwindow : void
+deactivate RowsController
+TableRowsSubwindow --> EditAnySubwindow : void
+deactivate TableRowsSubwindow
+EditAnySubwindow --> MouseInteractionDispatcher : void
+deactivate EditAnySubwindow
+MouseInteractionDispatcher --> SubwindowManager : void
+deactivate MouseInteractionDispatcher
+SubwindowManager --> MainWindow : void
+deactivate SubwindowManager
+MainWindow --> User
+deactivate MainWindow
+
+@enduml

@@ -1,0 +1,19 @@
+# Ignore build output
+/target/
+
+# Ignore coverage report output
+coverage-report/
+
+# Ignore IDE-specific files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Ignore OS junk
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log

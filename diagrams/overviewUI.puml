@@ -1,0 +1,186 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classAttributeFontSize 11
+
+' === UI Core ===
+class SubwindowManager
+class MouseInteractionDispatcher
+
+' === Subwindows ===
+abstract class Subwindow
+class TableSubwindow
+class TableDesignSubwindow
+class TableRowsSubwindow
+
+Subwindow <|-- TableSubwindow
+Subwindow <|-- TableDesignSubwindow
+Subwindow <|-- TableRowsSubwindow
+
+class SubwindowFactory
+class MouseInteractionDispatcher
+
+class SubwindowManager {
+    - subwindows : List<Subwindow>
+    - keyCommands : Map<KeyCombo, Runnable>
+
+    + addNewTableSubwindow()
+    + addNewTableDesignSubwindow(Table)
+    + addNewTableRowsSubwindow(Table)
+    + handleMouseEvent(...)
+    + handleKeyEvent(...)
+    + closeSubwindow(Subwindow)
+    + drawAll(Graphics)
+}
+
+
+class MouseInteractionDispatcher {
+    - strategies : List<MouseInteractionStrategy>
+    + dispatchMouseEvent(...)
+}
+
+interface MouseInteractionStrategy {
+    + wantsToHandle(Subwindow, x, y, clicks) : boolean
+    + handle(SubwindowManager, Subwindow, id, x, y, clicks) : void
+}
+
+class SubwindowFactory {
+    - createdCount : int
+    + createNewTableSubwindow() : TableSubwindow
+    + createNewTableDesignSubwindow(Table) : TableDesignSubwindow
+    + createNewTableRowsSubwindow(Table) : TableRowsSubwindow
+}
+
+
+abstract class Subwindow {
+    - x : int
+    - y : int
+    - width : int
+    - height : int
+    - title : String
+    + handleKeyEvent(id: int, keyCode: int, keyChar: char) : void
+    + handleMouseEvent(id: int, x: int, y: int, clickCount: int) : void
+}
+
+class TableSubwindow {
+    - selectedTableIndex : int
+        + handleKeyEvent(id: int, keyCode: int, keyChar: char) : void
+    + handleMouseEvent(id: int, x: int, y: int, clickCount: int) : void
+}
+
+class TableDesignSubwindow {
+    - selectedColumnIndex: int
+    + handleKeyEvent(id: int, keyCode: int, keyChar: char) : void
+    + handleMouseEvent(id: int, x: int, y: int, clickCount: int) : void
+}
+
+class TableRowsSubwindow {
+    - selectedRowIndex: int
+    + handleKeyEvent(id: int, keyCode: int, keyChar: char) : void
+    + handleMouseEvent(id: int, x: int, y: int, clickCount: int) : void
+}
+
+
+SubwindowManager --> Subwindow : manages >
+SubwindowManager --> SubwindowFactory : factory
+SubwindowManager --> MouseInteractionDispatcher : mouseDispatcher
+MouseInteractionDispatcher "1" --> "*" MouseInteractionStrategy
+SubwindowFactory --> TableSubwindow : creates >
+SubwindowFactory --> TableDesignSubwindow : creates >
+SubwindowFactory --> TableRowsSubwindow : creates >
+
+note right of MouseInteractionDispatcher
+  Interaction strategies:
+  - CloseButtonStrategy
+  - DragStrategy
+  - EditAnySubwindowStrategy
+  - OpenTableStrategy
+  - ResizeStrategy
+  - ScrollInteractionStrategy
+end note
+
+' === Controllers ===
+class ColumnsController {
+    - table : Table
+    + columnsRequest() : List<Column>
+    + handleCreateNewColumnRequest()
+    + handleDeleteColumnRequest(Column)
+    + rename(Column, String)
+    + setColumnType(Column, ColumnType)
+    + toggleBlanksAllowed(Column)
+    + toggleDefaultValue(String, Column)
+    + getTable() : Table
+}
+
+class RowsController {
+    - table : Table
+    + rowsRequest() : List<Row>
+    + columnsRequest() : List<Column>
+    + handleCreateNewRowRequest()
+    + typeRequest(int) : ColumnType
+    + columnAllowsBlanks(int) : boolean
+    + handleDeleteRowRequest(Row)
+    + toggleValue(Row, int, String)
+    + getTable() : Table
+}
+
+class TablesController {
+    - tableRepository : TableRepository
+    + tablesRequest() : List<Table>
+    + handleCreateNewTableRequest()
+    + handleDeleteTableRequest(Table)
+    + rename(Table, String)
+    + isTableNameValid(String, Table) : boolean
+}
+
+TableSubwindow --> TablesController : controller
+TableDesignSubwindow --> ColumnsController : controller
+TableRowsSubwindow --> RowsController : controller
+
+' === Editors & Strategies ===
+class NameEditor<T> {
+    - editingTarget : T
+    - currentInput : String
+    - originalName : String
+    - editing : boolean
+    + startEditing(target: T)
+    + handleKeyEvent(id: int, keyCode: int, keyChar: char)
+    + drawName(g: Graphics, target: T, x: int, y: int, width: int, height: int)
+    + commitEdit()
+    + cancelEdit()
+    + stopEditing()
+    + isValid() : boolean
+}
+class ColumnDefaultValueEditor {
+    - editingTarget : Column
+    - currentInput : String
+    - editing : boolean
+    - blockedTypeColumn : Column
+
+    + startEditing(Column)
+    + drawValue(Graphics, Column, x, y)
+    + commitEdit()
+    + stopEditing()
+    + isValid() : boolean
+
+}
+
+class RowValueEditor {
+    - editingRow : Row
+    - editingColIndex : int
+    - currentInput : String
+    - editing : boolean
+    + startEditing(row: Row, colIndex: int)
+    + handleKeyEvent(id: int, keyCode: int, keyChar: char)
+    + draw(g: Graphics, row: Row, colIndex: int, x: int, y: int, type: ColumnType)
+    + commitEdit()
+    + stopEditing()
+    + isValid() : boolean
+}
+
+TableSubwindow --> NameEditor : nameEditor
+TableDesignSubwindow --> NameEditor : nameEditor
+TableDesignSubwindow --> ColumnDefaultValueEditor : defaultValueEditor
+TableRowsSubwindow --> RowValueEditor: valueEditor
+
+@enduml

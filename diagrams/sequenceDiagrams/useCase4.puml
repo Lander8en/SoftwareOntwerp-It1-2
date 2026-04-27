@@ -1,0 +1,66 @@
+@startuml
+hide footbox
+title Use Case 4: Open Table
+
+Actor User
+participant MainWindow
+participant SubwindowManager
+participant MouseInteractionDispatcher
+participant openTableStrategy
+participant TableSubwindow
+
+participant SubwindowFactory
+participant TableDesignSubwindow
+participant TableRowsSubwindow
+
+User -> MainWindow : double-click on table name
+activate MainWindow
+MainWindow -> SubwindowManager : handleMouseEvent(MOUSE_CLICKED, x, y, 2)
+activate SubwindowManager
+SubwindowManager -> SubwindowManager : findSubwindowAt(...) 
+SubwindowManager --> SubwindowManager : target
+SubwindowManager -> SubwindowManager : bringToFront(target)
+SubwindowManager -> MouseInteractionDispatcher : dispatchMouseEvent(...)
+activate MouseInteractionDispatcher
+MouseInteractionDispatcher -> openTableStrategy : wantsToHandle(...)
+activate openTableStrategy
+return true
+MouseInteractionDispatcher -> openTableStrategy : handle(...)
+activate openTableStrategy
+openTableStrategy -> TableSubwindow : getTableIndexFromY(...)
+activate TableSubwindow
+return index
+openTableStrategy -> TableSubwindow : getSelectedTable(index)
+note right of TableSubwindow : Goes to the domain through the controller
+activate TableSubwindow
+return Table
+openTableStrategy -> TableSubwindow : getColmuns()
+note right of TableSubwindow : Goes to the domain through the controller
+activate TableSubwindow
+return columns
+opt Table has no columns
+    openTableStrategy -> SubwindowManager : addNewTableDesignSubwindow(Table)
+    activate SubwindowManager
+    SubwindowManager -> SubwindowFactory : createNewTableDesignSubwindow(Table)
+    activate SubwindowFactory
+    SubwindowFactory -> TableDesignSubwindow : TableDesignWindow(...)
+    activate TableDesignSubwindow
+    return TableDesignSubwindow
+    return TableDesignSubwindow
+    return void
+else Table has columns
+    openTableStrategy -> SubwindowManager : addNewTableRowsSubwindow(Table)
+    activate SubwindowManager
+    SubwindowManager -> SubwindowFactory : createNewTableRowsSubwindow(Table)
+    activate SubwindowFactory
+    SubwindowFactory -> TableRowsSubwindow : TableRowsSubwindow(...)
+    activate TableRowsSubwindow
+    return TableRowsSubwindow
+    return TableRowsSubwindow
+    return void
+end
+return void
+return void
+return void
+return
+@enduml

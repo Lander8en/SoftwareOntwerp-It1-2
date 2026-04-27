@@ -1,0 +1,68 @@
+@startuml
+title Use Case 5: Add Column
+hide footbox
+
+actor User
+
+participant MainWindow
+participant SubwindowManager
+participant MouseInteractionDispatcher
+participant EditAnySubwindow
+participant TableDesignSubwindow
+participant ColumnsController
+participant Table
+participant ColumnRepository
+participant NameGenerator
+participant Column
+
+User -> MainWindow : double-click
+activate MainWindow
+MainWindow -> SubwindowManager : handleMouseEvent(...)
+activate SubwindowManager
+SubwindowManager -> SubwindowManager : findSubwindowAt(...)
+SubwindowManager --> SubwindowManager : target
+SubwindowManager -> SubwindowManager : bringToFront(target)
+SubwindowManager -> MouseInteractionDispatcher : dispatchMouseEvent(...)
+activate MouseInteractionDispatcher
+MouseInteractionDispatcher -> EditAnySubwindow : wantsToHandle(...)
+activate EditAnySubwindow
+EditAnySubwindow --> MouseInteractionDispatcher : true
+deactivate EditAnySubwindow
+MouseInteractionDispatcher -> EditAnySubwindow : handle(...)
+activate EditAnySubwindow
+EditAnySubwindow -> TableDesignSubwindow : handleMouseEvent(...)
+activate TableDesignSubwindow
+TableDesignSubwindow -> TableDesignSubwindow : isInAddColumnArea(...)
+TableDesignSubwindow --> TableDesignSubwindow : true
+TableDesignSubwindow -> ColumnsController : handleCreateNewColumnRequest()
+activate ColumnsController
+ColumnsController -> Table : createNewColumn()
+activate Table
+Table -> ColumnRepository : createNewColumn()
+activate ColumnRepository
+ColumnRepository -> NameGenerator : generateUniqueName(...)
+activate NameGenerator
+NameGenerator --> ColumnRepository : name
+deactivate NameGenerator
+ColumnRepository -> Column : Column()
+activate Column
+Column --> ColumnRepository : column
+deactivate Column
+ColumnRepository --> Table : void
+deactivate ColumnRepository
+Table -> Table : updateExistingRowsWithDefaultValues()
+Table --> ColumnsController : void
+deactivate Table
+ColumnsController --> TableDesignSubwindow : void
+deactivate ColumnsController
+TableDesignSubwindow --> EditAnySubwindow : void
+deactivate TableDesignSubwindow
+EditAnySubwindow --> MouseInteractionDispatcher : void
+deactivate EditAnySubwindow
+MouseInteractionDispatcher --> SubwindowManager : void
+deactivate MouseInteractionDispatcher
+SubwindowManager --> MainWindow : void
+deactivate SubwindowManager
+MainWindow --> User
+deactivate MainWindow
+@enduml
